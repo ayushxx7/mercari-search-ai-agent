@@ -1,5 +1,7 @@
 # Mercari Japan AI Shopper
 
+## [Live Preview Here](https://mercari-japan.streamlit.app/)
+
 ## Overview
 This project is a Python-based AI agent and web application for searching, scraping, and recommending products from Mercari Japan. It features a robust backend scraper, PostgreSQL integration, SEO tagging, and a modern Streamlit UI. The system is designed to:
 - Understand user requests (LLM integration ready)
