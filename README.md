@@ -53,7 +53,7 @@ Set the following environment variables (e.g., in your Streamlit Cloud or local 
 ## Usage Instructions
 - Use the web UI to search, filter, and browse products.
 - The search bar supports real-time keyword search.
-- Filter by category, SEO tags, price, and more.
+- Filter by SEO tags, price, and more.
 
 ## Usage Instructions (AI Assistant)
 - Enable the "AI Assistant" checkbox in the UI to use LLM-powered search and recommendations.
