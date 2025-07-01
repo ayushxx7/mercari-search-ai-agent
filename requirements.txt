@@ -1,9 +1,7 @@
 streamlit
 sqlalchemy
 psycopg2-binary
-playwright
 asyncio
 uuid
-mercari_python
 mercapi
-openai 
+openai

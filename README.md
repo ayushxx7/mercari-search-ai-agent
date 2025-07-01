@@ -20,8 +20,8 @@ This project is a Python-based AI agent and web application for searching, scrap
 2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
-   playwright install
    ```
+
 3. **Configure PostgreSQL:**
    - Edit `config.py` with your database credentials.
    - Ensure your PostgreSQL server is running.
