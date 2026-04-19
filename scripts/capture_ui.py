@@ -27,18 +27,17 @@ async def capture():
 
         # 2. Record snappy demo
         context = await browser.new_context(
-            viewport={'width': 1280, 'height': 720}, # Standard 16:9
+            viewport={'width': 1280, 'height': 720},
             record_video_dir=video_dir,
             record_video_size={'width': 1280, 'height': 720}
         )
         page = await context.new_page()
         
         try:
-            print("Recording snappy demo...")
+            print("Recording ultra-snappy demo...")
             await page.goto("http://localhost:8502")
             await page.wait_for_selector("h1")
             
-            # Short landing pause
             await asyncio.sleep(1)
             await page.screenshot(path="showcase/landing.png")
 
@@ -47,7 +46,6 @@ async def capture():
             await search_box.fill("bag")
             await page.keyboard.press("Enter")
             
-            # Wait just enough for default results
             await asyncio.sleep(3) 
             await page.screenshot(path="showcase/default_search_bag.png")
 
@@ -55,14 +53,12 @@ async def capture():
             print("Toggling AI Assistant...")
             await page.get_by_text("AI Assistant (LLM-powered search & recommendations)").click()
             
-            # Wait for AI recommendations - using a shorter, more precise wait
-            # Usually takes 8-12 seconds for LLM response + rendering
-            await asyncio.sleep(10) 
+            # Wait just enough for AI recommendations to appear
+            await asyncio.sleep(7) 
             
             await page.screenshot(path="showcase/ai_search_bag.png")
             
-            # Final pause for viewer to see results
-            await asyncio.sleep(2)
+            # No final pause - cut immediately
             print("Demo sequence complete.")
             
         except Exception as e:
@@ -80,11 +76,11 @@ async def capture():
             
             final_gif = "showcase/demo_ai_search.gif"
             
-            print("Trimming and converting to GIF...")
-            # -ss 1: Start 1 second in (skip navigation flash)
-            # -t 18: Limit duration to ~18 seconds total (snappy)
-            os.system(f"ffmpeg -y -i {raw_video} -ss 1 -t 18 -vf \"fps=10,scale=800:-1:flags=lanczos\" {final_gif}")
-            print(f"Snappy GIF saved to {final_gif}")
+            print("Trimming and converting to ultra-snappy GIF...")
+            # -ss 1: Start 1 second in
+            # -t 11: Limit duration to 11 seconds total
+            os.system(f"ffmpeg -y -i {raw_video} -ss 1 -t 11 -vf \"fps=10,scale=800:-1:flags=lanczos\" {final_gif}")
+            print(f"Ultra-snappy GIF saved to {final_gif}")
             
     if os.path.exists(video_dir):
         shutil.rmtree(video_dir)
