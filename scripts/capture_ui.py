@@ -12,8 +12,23 @@ async def capture():
     os.makedirs(video_dir)
 
     async with async_playwright() as p:
-        # Launch browser with video recording enabled
+        # Launch browser
         browser = await p.chromium.launch()
+        
+        # Initial wait for server to be ready - without recording
+        print("Pre-loading app to handle hydration...")
+        temp_context = await browser.new_context()
+        temp_page = await temp_context.new_page()
+        try:
+            await temp_page.goto("http://localhost:8502", timeout=60000)
+            await temp_page.wait_for_selector("h1", timeout=60000)
+            # Wait for Streamlit's "Running..." to stop
+            await asyncio.sleep(10) 
+        except Exception as e:
+            print(f"Warning during pre-load: {e}")
+        await temp_context.close()
+
+        # Now start recording for the actual demo
         context = await browser.new_context(
             viewport={'width': 1280, 'height': 800},
             record_video_dir=video_dir,
@@ -21,39 +36,35 @@ async def capture():
         )
         page = await context.new_page()
         
-        print("Waiting for Streamlit to load (20s delay for full hydration)...")
-        await asyncio.sleep(20)
-        
         try:
+            print("Navigating for recording...")
             await page.goto("http://localhost:8502")
-            # Wait for the main title to appear
-            await page.wait_for_selector("h1", timeout=60000)
-            print("Page loaded.")
+            await page.wait_for_selector("h1")
+            await asyncio.sleep(2) # Short pause for visuals
             
-            # 1. Take landing page screenshot after delay
-            await asyncio.sleep(5)
+            # 1. Landing screenshot
             await page.screenshot(path="showcase/landing.png")
             print("Landing screenshot saved.")
 
             # 2. Perform Default Search for "bag"
-            print("Performing default search for 'bag'...")
-            search_input = page.get_by_placeholder("Search for products")
-            if await search_input.count() == 0:
-                 # Fallback to general text input if placeholder doesn't match
-                 search_input = page.locator("input").first
+            print("Performing default search for 'bag' in the main search box...")
             
-            await search_input.fill("bag")
+            # Use label-based selector for the actual search box
+            search_box = page.get_by_label("🔎 Search for products")
+            await search_box.fill("bag")
             await page.keyboard.press("Enter")
-            await asyncio.sleep(8) # Wait for search results
             
+            print("Waiting for default search results...")
+            await asyncio.sleep(5) 
             await page.screenshot(path="showcase/default_search_bag.png")
-            print("Default search screenshot saved.")
 
             # 3. Enable AI Assistant
             print("Enabling AI Assistant...")
-            # Streamlit checkboxes are often labels
             await page.get_by_text("AI Assistant (LLM-powered search & recommendations)").click()
-            await asyncio.sleep(15) # Wait for AI to process and recommend
+            
+            print("Waiting for AI recommendations (this takes a moment)...")
+            # Wait for the recommendations section or just enough time for the LLM
+            await asyncio.sleep(15) 
             
             await page.screenshot(path="showcase/ai_search_bag.png")
             print("AI search screenshot saved.")
@@ -67,22 +78,27 @@ async def capture():
         await context.close()
         await browser.close()
 
-        # Find the recorded video file and rename it
+        # Process the video
         videos = os.listdir(video_dir)
         if videos:
             video_path = os.path.join(video_dir, videos[0])
-            final_video = "showcase/demo_ai_search.webm"
-            shutil.move(video_path, final_video)
-            print(f"Video saved to {final_video}")
+            raw_video = "showcase/raw_demo.webm"
+            shutil.move(video_path, raw_video)
             
-            # Convert to GIF using ffmpeg for README compatibility
-            print("Converting video to GIF...")
-            os.system(f"ffmpeg -y -i {final_video} -vf \"fps=10,scale=800:-1:flags=lanczos\" showcase/demo_ai_search.gif")
-            print("GIF saved to showcase/demo_ai_search.gif")
+            final_gif = "showcase/demo_ai_search.gif"
             
-    # Cleanup temp video dir
+            # Convert to GIF with trimming and optimization
+            # We trim the first 2 seconds of the recorded session which might still be loading
+            print("Converting video to optimized GIF...")
+            # -ss 2 trims the first 2 seconds
+            os.system(f"ffmpeg -y -i {raw_video} -ss 2 -vf \"fps=10,scale=800:-1:flags=lanczos\" {final_gif}")
+            print(f"Optimized GIF saved to {final_gif}")
+            
+    # Cleanup
     if os.path.exists(video_dir):
         shutil.rmtree(video_dir)
+    if os.path.exists("showcase/raw_demo.webm"):
+        os.remove("showcase/raw_demo.webm")
 
 if __name__ == "__main__":
     if not os.path.exists("showcase"):
