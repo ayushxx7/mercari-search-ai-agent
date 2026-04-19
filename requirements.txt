@@ -5,3 +5,4 @@ asyncio
 uuid
 mercapi
 openai
+python-dotenv

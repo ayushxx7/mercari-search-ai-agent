@@ -7,7 +7,11 @@ KEYWORD_TAG_MAP = {
     "switch": ["gaming", "nintendo"],
     "macbook": ["laptop", "apple"],
     "バッグ": ["fashion", "bag"],
-    "イヤホン": ["audio", "earbuds"]
+    "リュック": ["fashion", "bag", "backpack"],
+    "backpack": ["fashion", "bag", "backpack"],
+    "イヤホン": ["audio", "earbuds"],
+    "camera": ["electronics", "photography"],
+    "時計": ["watch", "accessory"]
 }
 
 def rule_based_tags(title: str):
@@ -19,12 +23,14 @@ def rule_based_tags(title: str):
     return list(set(tags))
 
 def tag_unprocessed_products():
-    session = SessionLocal()
-    products = session.query(Product).filter(Product.seo_tags == None).all()
-    for p in products:
-        tags = rule_based_tags(p.title)
-        if tags:
-            p.seo_tags = tags
-    session.commit()
-    session.close()
-    print(f"✅ Tagged {len(products)} products.") 
+    with SessionLocal() as session:
+        products = session.query(Product).filter(Product.seo_tags == None).all()
+        for p in products:
+            tags = rule_based_tags(p.title)
+            if tags:
+                p.seo_tags = tags
+        session.commit()
+        print(f"✅ Tagged {len(products)} products.")
+
+if __name__ == "__main__":
+    tag_unprocessed_products()

@@ -1,41 +1,61 @@
 import os
 from openai import OpenAI
-import requests
+from dotenv import load_dotenv
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+# Load environment variables from .env if it exists
+load_dotenv()
+
+# Groq and OpenRouter keys
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
-# Helper to get OpenAI-compatible client for either provider
+# Helper to get client for either Groq or OpenRouter
 def get_client(provider):
-    if provider == "openrouter":
+    if provider == "groq":
+        return OpenAI(
+            api_key=GROQ_API_KEY,
+            base_url="https://api.groq.com/openai/v1"
+        )
+    elif provider == "openrouter":
         return OpenAI(
             api_key=OPENROUTER_API_KEY,
             base_url=OPENROUTER_BASE_URL
         )
-    # Default to OpenAI
-    return OpenAI(api_key=OPENAI_API_KEY)
+    return None
 
 # Helper to get model name for each provider
 def get_model_name(provider):
+    if provider == "groq":
+        return "llama-3.3-70b-versatile"
     if provider == "openrouter":
-        return "deepseek/deepseek-chat-v3-0324:free"
-    return "gpt-4o-mini"
+        return "deepseek/deepseek-chat"
+    return None
 
-# Fallback logic: try primary, then secondary provider
-def call_with_fallback(fn, *args, provider="openai", **kwargs):
-    providers = [provider, "openrouter" if provider == "openai" else "openai"]
+# Fallback logic: try Groq, then OpenRouter
+def call_with_fallback(fn, *args, provider=None, **kwargs):
+    providers = ["groq", "openrouter"]
+    
     last_exc = None
     for prov in providers:
+        if prov == "groq" and not GROQ_API_KEY:
+            continue
+        if prov == "openrouter" and not OPENROUTER_API_KEY:
+            continue
+            
         try:
             return fn(*args, provider=prov, **kwargs)
         except Exception as e:
             last_exc = e
+            print(f"LLM Provider {prov} failed: {e}")
             continue
-    raise last_exc
+    
+    if last_exc:
+        raise last_exc
+    raise Exception("No LLM provider available. Please check your .env file for GROQ_API_KEY or OPENROUTER_API_KEY.")
 
-# Translate text between English and Japanese using LLM
-def translate_text(text, dest_lang, provider="openai"):
+# Translate text using LLM
+def translate_text(text, dest_lang, provider=None):
     def _translate(text, dest_lang, provider):
         client = get_client(provider)
         model = get_model_name(provider)
@@ -49,50 +69,53 @@ def translate_text(text, dest_lang, provider="openai"):
         return response.choices[0].message.content.strip()
     return call_with_fallback(_translate, text, dest_lang, provider=provider)
 
-# Use LLM to extract search intent and filters from a user query
-def extract_search_intent(user_query, language="en", provider="openai"):
+# Use LLM to extract search intent and filters
+def extract_search_intent(user_query, language="en", provider=None):
     def _extract(user_query, language, provider):
         client = get_client(provider)
         model = get_model_name(provider)
         system_prompt = (
             "You are a shopping assistant for Mercari Japan. "
-            "Given a user's request, extract the following as JSON: "
+            "Given a user's request, extract search filters as JSON. "
+            "IMPORTANT: Mercari Japan titles are mostly in Japanese. "
+            "If the user query is in English, you MUST include both English and translated Japanese keywords in the 'keywords' list to ensure high recall. "
+            "For example, if the user asks for 'backpack', include ['backpack', 'リュック', 'バックパック'].\n\n"
+            "Return JSON with:\n"
             "- keywords (list of strings)\n"
             "- category (string, optional)\n"
             "- min_price (float, optional)\n"
             "- max_price (float, optional)\n"
             "- tags (list of strings, optional)\n"
-            "If the query is in Japanese, return keywords in Japanese. If in English, return in English. "
-            "If the user specifies a language, respect it."
+            "IMPORTANT: Return ONLY valid JSON."
         )
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_query}
         ]
+        
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            temperature=0.2,
-            max_tokens=256,
+            temperature=0.1,
+            max_tokens=512,
             response_format={"type": "json_object"}
         )
         return response.choices[0].message.content
     return call_with_fallback(_extract, user_query, language, provider=provider)
 
-# Use LLM to generate reasoned recommendations for top products
-def recommend_products(products, user_query, language="en", provider="openai"):
+# Use LLM to generate reasoned recommendations
+def recommend_products(products, user_query, language="en", provider=None):
     def _recommend(products, user_query, language, provider):
         client = get_client(provider)
         model = get_model_name(provider)
         system_prompt = (
             "You are a highly skilled shopping assistant for Mercari Japan. "
-            "Given a user's request (which may be in English, Japanese, or a mix) and a list of products (as JSON), "
+            "Given a user's request and a list of products (as JSON), "
             "select the top 3 products that best match the user's needs. "
-            "Consider product titles, tags, and descriptions in both English and Japanese, including transliterations and synonyms. "
-            "If the user query is in English but products are in Japanese (or vice versa), use your knowledge to match them semantically. "
             "For each recommendation, provide a concise reason in the user's query language. "
-            "Output as a JSON list: [{title, price, reason, url}]. "
-            "Return only the JSON list, no extra text."
+            "Output as a JSON object with a 'recommendations' key containing a list of objects: "
+            "{\"recommendations\": [{\"title\": \"...\", \"price\": 123, \"reason\": \"...\", \"url\": \"...\", \"image_url\": \"...\"}]} "
+            "Return only the JSON object, no extra text."
         )
         messages = [
             {"role": "system", "content": system_prompt},
@@ -101,8 +124,8 @@ def recommend_products(products, user_query, language="en", provider="openai"):
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            temperature=0.3,
-            max_tokens=512,
+            temperature=0.2,
+            max_tokens=1024,
             response_format={"type": "json_object"}
         )
         return response.choices[0].message.content
