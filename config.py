@@ -3,6 +3,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import streamlit as st
 
+# Load environment variables (fallback for local dev)
+from dotenv import load_dotenv
+load_dotenv()
+
 # Helper to get secret from Streamlit or Environment
 def get_secret(key, default=None):
     try:
@@ -12,7 +16,8 @@ def get_secret(key, default=None):
         pass
     return os.environ.get(key, default)
 
-# Default to local SQLite if no Postgres URL is provided
+# Primary DB connection (e.g. NeonDB from .env or st.secrets)
+# Fallback to local SQLite if no DB_URL is found
 DB_URL = get_secret("DB_URL", "sqlite:///./mercari_local.db")
 
 try:
