@@ -1,14 +1,24 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import streamlit as st
 
 # Load environment variables from .env if it exists
 load_dotenv()
 
+# Helper to get secret from Streamlit or Environment
+def get_secret(key, default=None):
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except Exception:
+        pass
+    return os.environ.get(key, default)
+
 # Groq and OpenRouter keys
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+GROQ_API_KEY = get_secret("GROQ_API_KEY")
+OPENROUTER_API_KEY = get_secret("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = get_secret("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
 # Helper to get client for either Groq or OpenRouter
 def get_client(provider):
@@ -52,7 +62,7 @@ def call_with_fallback(fn, *args, provider=None, **kwargs):
     
     if last_exc:
         raise last_exc
-    raise Exception("No LLM provider available. Please check your .env file for GROQ_API_KEY or OPENROUTER_API_KEY.")
+    raise Exception("No LLM provider available. Please check your .env or st.secrets for GROQ_API_KEY or OPENROUTER_API_KEY.")
 
 # Translate text using LLM
 def translate_text(text, dest_lang, provider=None):
@@ -114,7 +124,7 @@ def recommend_products(products, user_query, language="en", provider=None):
             "select the top 3 products that best match the user's needs. "
             "For each recommendation, provide a concise reason in the user's query language. "
             "Output as a JSON object with a 'recommendations' key containing a list of objects: "
-            "{\"recommendations\": [{\"title\": \"...\", \"price\": 123, \"reason\": \"...\", \"url\": \"...\", \"image_url\": \"...\"}]} "
+            "{\"recommendations\": [{\"title\": \"...\", \"price\": 123, \"reason\": \"...\", \"url\": \"...\", \"reason\": \"...\", \"url\": \"...\", \"image_url\": \"...\"}]} "
             "Return only the JSON object, no extra text."
         )
         messages = [

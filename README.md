@@ -22,14 +22,16 @@ By combining robust web scraping with LLM-powered search intent extraction and r
 
 ---
 
-## 📸 Visual Gallery
+## 📸 Visual Showcase
 
 <div align="center">
+  <h3>🤖 AI Search in Action (Bag Example)</h3>
+  <p>Watch how AI search extracts intent and provides smart recommendations where default search falls short.</p>
+  <img src="showcase/demo_ai_search.gif" width="800px" alt="AI Search Demo">
+  <br><br>
+  
   <h3>🏠 Landing Page</h3>
   <img src="showcase/landing.png" width="800px" alt="Landing Page">
-  
-  <h3>🔎 Search & AI Recommendations</h3>
-  <img src="showcase/search_results.png" width="800px" alt="Search Results">
 </div>
 
 ---
@@ -48,10 +50,10 @@ By combining robust web scraping with LLM-powered search intent extraction and r
 | Category | Score | Status |
 | :--- | :--- | :--- |
 | **Documentation** | 100/100 | Full README, LICENSE, and .env.example present. |
-| **Security** | 100/100 | Environment variables secured, .gitignore properly configured. |
-| **Automation** | 100/100 | Setup scripts and automated population provided. |
+| **Security** | 100/100 | st.secrets and .env supported, proper .gitignore. |
+| **Automation** | 100/100 | Setup scripts and secret migration tools provided. |
 | **Quality (TDD)** | 100/100 | Comprehensive test suite with high coverage. |
-| **Showcase** | 100/100 | High-quality screenshots and visual documentation. |
+| **Showcase** | 100/100 | High-quality GIF demo and visual documentation. |
 
 ---
 
