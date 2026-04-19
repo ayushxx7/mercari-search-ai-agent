@@ -1,7 +1,14 @@
 # 🛒 Mercari Japan AI Shopper
 
+<div align="center">
+  <a href="https://mercari-japan.streamlit.app/">
+    <img src="https://img.shields.io/badge/Try_App_Live-Click_Here-red?style=for-the-badge&logo=streamlit" alt="Try App Live">
+  </a>
+</div>
+
+<br>
+
 [![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://mercari-japan.streamlit.app/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
 [![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
