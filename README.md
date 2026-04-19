@@ -6,7 +6,7 @@
 [![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## 🚀 [Try the Live App](https://mercari-japan.streamlit.app/)
+## 🚀 [Live Preview](https://mercari-japan.streamlit.app/)
 
 ## 🌟 Overview
 **Mercari Japan AI Shopper** is a sophisticated AI agent and web application designed to revolutionize how you search, discover, and analyze products on Mercari Japan. 
