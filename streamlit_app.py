@@ -1,14 +1,37 @@
 import streamlit as st
-from query import get_products
-from llm_agent import extract_search_intent, recommend_products, translate_text
 import json
 import os
-from sqlalchemy import text
-from config import engine
 
+# Set page config early
 st.set_page_config(layout="wide", page_title="🛒 Mercari Product Explorer")
 
-# Check database connectivity first
+# Robust imports to catch configuration/dependency issues
+try:
+    from sqlalchemy import text
+    from config import engine
+    from models import Base
+    from populate_db import populate
+    from query import get_products
+    from llm_agent import extract_search_intent, recommend_products, translate_text
+
+    # Initialize Database on Startup (Create tables & Seed if needed)
+    try:
+        # This creates tables if they don't exist
+        Base.metadata.create_all(bind=engine)
+        # This seeds 50 products if the DB is empty
+        populate()
+    except Exception as e:
+        st.error(f"⚠️ Warning: Database initialization failed. Some features might not work.\nError: {e}")
+
+except ImportError as e:
+    st.error(f"❌ Critical Error: Dependency or module missing.\n{e}")
+    st.info("💡 Hint: Make sure you've installed all requirements with 'pip install -r requirements.txt'.")
+    st.stop()
+except Exception as e:
+    st.error(f"❌ Unexpected error during startup: {e}")
+    st.stop()
+
+# Check database connectivity
 db_ready = False
 try:
     with engine.connect() as conn:
@@ -16,7 +39,8 @@ try:
         db_ready = True
 except Exception as e:
     st.error(f"❌ Database connection failed. Please check your DB_URL environment variable.\nError: {e}")
-    st.info("💡 Hint: If you're running locally, make sure PostgreSQL is running. If on Streamlit Cloud, add DB_URL to your secrets.")
+    st.info("💡 Hint: If you're running locally, make sure PostgreSQL is running. If on Streamlit Cloud, add DB_URL to your secrets. If not set, it defaults to a local SQLite database.")
+
 
 st.sidebar.title("🔍 Filter Products")
 
